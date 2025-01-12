@@ -51,7 +51,8 @@ class Department:
         
         # databases: saves queue and bed in each time of the simulation
         self.bed_database = dict()
-        self.queue_database = list()
+        self.queue_step = dict()
+        self.bed_step = dict()
         
         for i in range(self.bed_limit):
             self.bed_database[i+1] = Bed()
@@ -111,8 +112,11 @@ class Department:
                 del self.data['waiting list']['normal'][next_patient]
             return next_patient
 
+    def update_database(self, step):
+        self.queue_step[step] = ((self.priority_queue if self.priority_queue is not None else 0) + (self.normal_queue if self.normal_queue is not None else 0))
+        self.bed_step[step] = self.beds
+        
 
-            
     def adjust_queue(self, patient_type: str, action: str, clock):
         '''Adjusts the queue length based on patient type and action (increase/decrease).'''
         if patient_type == 'emergency':
@@ -122,7 +126,6 @@ class Department:
                     if self.priority_queue > 0 or self.beds == self.bed_limit:
                         if ((self.queue_limit is not None) and (self.priority_queue +(self.normal_queue if self.normal_queue else 0) < self.queue_limit)) or (self.queue_limit is None):
                             self.priority_queue += 1
-                            self.queue_database.append(self.priority_queue +(self.normal_queue if self.normal_queue else 0))
                             if (self.queue_limit is not None) and ((self.normal_queue if self.normal_queue else 0) + self.priority_queue) == self.queue_limit:
                                 self.last_full_time = clock
                             return 'successful'
@@ -135,10 +138,8 @@ class Department:
                     if (self.priority_queue and self.priority_queue > 0) or self.beds == self.bed_limit or self.normal_queue > 0:
                         if ((self.queue_limit is not None) and (self.normal_queue +(self.priority_queue if self.priority_queue else 0) < self.queue_limit)) or (self.queue_limit is None):
                             self.normal_queue += 1
-                            self.queue_database.append(self.normal_queue +(self.priority_queue if self.priority_queue else 0))
                             # if the queue reached the queue limit save the time
                             if (self.queue_limit is not None) and ((self.priority_queue if self.priority_queue else 0) + self.normal_queue) == self.queue_limit:
-                                print(f"Queue reached its limit at time: {clock}")
                                 self.last_full_time = clock
                             return 'successful'
                         else:
@@ -185,10 +186,10 @@ class Department:
             return 'successful'
         
     def max_queue(self):
-        return max(self.queue_database) if len(self.queue_database) != 0 else 0
+        return max(self.queue_step.values())
     
     def average_queue(self):
-        return sum(self.queue_database)/len(self.queue_database) if len(self.queue_database) != 0 else 0
+        return sum(self.queue_step.values())/len(self.queue_step.values())
     
     # retuns: [times that (used)beds are busy / simulation time] & [unused beds]
     def bed_efficiency_and_unused_beds(self, clock, simulation_time):
@@ -222,8 +223,8 @@ def get_departments():
     emergency_room   = Department(   'emergency room',       0,     10,    None,         0,              10)  # queue length can't be over 10
     pre_Surgery_room = Department(  'pre surgery room',      0,     25,     0,          None,           None) 
     laboratory       = Department(     'laboratory',         0,     3,      0,           0,             None) # this department has priority over some patients
-    operation_room   = Department(   'operation room',       0,     50,     0,           0,             None) # this department has priority over some patients
+    operation_room   = Department(   'operation room',       0,     30,     0,           0,             None) # this department has priority over some patients
     ward             = Department(       'ward',             0,     40,     0,          None,           None)
-    icu              = Department(        'ICU',             0,     10,     0,          None,           None)
-    ccu              = Department(        'CCU',             0,     5,      0,          None,           None)
+    icu              = Department(        'ICU',             0,     20,     0,          None,           None)
+    ccu              = Department(        'CCU',             0,     15,      0,          None,           None)
     return emergency_room, pre_Surgery_room, laboratory, operation_room, ward, icu, ccu

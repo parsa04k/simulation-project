@@ -15,9 +15,12 @@ from plot import *
 
 
 # Constants
-REPLICATIONS = 10
+REPLICATIONS = 20
 DAYS_TO_SIMULATE = 30  # days
 SIMULATION_TIME = DAYS_TO_SIMULATE * 1440  # minutes in a day
+
+# create excel (T/F)
+CREATE_EXCEL = False
 
 # Name of departments
 class Names:
@@ -33,14 +36,14 @@ class Names:
 analyze_steps = 20000
 analyze = {
     # |department name|:|plot queue?| |plot beds?| -> EXAMPLE : Names.ER : [True,False]
-        Names.LAB : [True,False]
+        Names.WARD : [True,False]
 }
 
 
 
 # Creating the departments
 emergency_room, pre_Surgery_room, laboratory, operation_room, ward, icu, ccu = get_departments()
-departments_in_hospital = [emergency_room, pre_Surgery_room, laboratory, operation_room, ward, icu, ccu]
+departments_in_hospital = [pre_Surgery_room, emergency_room, laboratory, operation_room, ward, icu, ccu]
 
 
 # Define constants for patient types
@@ -54,7 +57,7 @@ class Types:
 # Define constants for activity durations and thresholds
 class Activity:
     PAPERWORK_EMERGENCY = 10  # Minutes
-    PAPERWORK_NORMAL = 60  # Minutes
+    PAPERWORK_NORMAL = 60 # Minutes
     NORMAL_SURGERY_WAIT = 2880  # Minutes (2 days)
     PREPARE_SURGERY = 10  # Minutes
     ONE_DAY = 1440 # Minutes
@@ -399,34 +402,35 @@ def update_tracker(tracker, step, clock, event, patient, amareh, ps_variable, fe
     tracker['future event list'].append(excel_fel)
     return tracker
 
-def update_estimators(estimators, clock, simulation_time, replication, avg_stay, prob_emergency_queue, redo_avg, one_day_wait):
+def update_estimators(estimators, clock, simulation_time, replication, avg_stay, prob_emergency_queue, redo_avg, one_day_wait, departments):
+   
     estimators['replication'].append(replication)
     estimators['average staying time is system'].append(avg_stay)
     estimators['probability of full emergency room queue'].append(prob_emergency_queue)
-    estimators['pre surgery room max queue'].append(pre_Surgery_room.max_queue())
-    estimators['pre surgery room average queue'].append(pre_Surgery_room.average_queue())
-    estimators['pre surgery room bed efficiency'].append(pre_Surgery_room.bed_efficiency_and_unused_beds(clock, simulation_time)[0])
-    estimators['pre surgery room unused beds'].append(pre_Surgery_room.bed_efficiency_and_unused_beds(clock, simulation_time)[1])
-    estimators['emergency room bed efficiency'].append(emergency_room.bed_efficiency_and_unused_beds(clock, simulation_time)[0])
-    estimators['emergency room unused beds'].append(emergency_room.bed_efficiency_and_unused_beds(clock, simulation_time)[1])
-    estimators['laboratory max queue'].append(laboratory.max_queue())
-    estimators['laboratory average queue'].append(laboratory.average_queue())
-    estimators['laboratory bed efficiency'].append(laboratory.bed_efficiency_and_unused_beds(clock, simulation_time)[0])
-    estimators['laboratory unused beds'].append(laboratory.bed_efficiency_and_unused_beds(clock, simulation_time)[1])
-    estimators['operation room max queue'].append(operation_room.max_queue())
-    estimators['operation room average queue'].append(operation_room.average_queue())
-    estimators['operation room bed efficiency'].append(operation_room.bed_efficiency_and_unused_beds(clock, simulation_time)[0])
-    estimators['operation room unused beds'].append(operation_room.bed_efficiency_and_unused_beds(clock, simulation_time)[1])
-    estimators['icu max queue'].append(icu.max_queue())
-    estimators['icu average queue'].append(icu.average_queue())
-    estimators['icu bed efficiency'].append(icu.bed_efficiency_and_unused_beds(clock, simulation_time)[0])
-    estimators['icu unused beds'].append(icu.bed_efficiency_and_unused_beds(clock, simulation_time)[1])
-    estimators['ccu max queue'].append(ccu.max_queue())
-    estimators['ccu average queue'].append(ccu.average_queue())
-    estimators['ccu bed efficiency'].append(ccu.bed_efficiency_and_unused_beds(clock, simulation_time)[0])
-    estimators['ccu unused beds'].append(ccu.bed_efficiency_and_unused_beds(clock, simulation_time)[1])
-    estimators['ward bed efficiency'].append(ward.bed_efficiency_and_unused_beds(clock, simulation_time)[0])
-    estimators['ward unused beds'].append(ward.bed_efficiency_and_unused_beds(clock, simulation_time)[1])
+    estimators['pre surgery room max queue'].append(departments[0].max_queue())
+    estimators['pre surgery room average queue'].append(departments[0].average_queue())
+    estimators['pre surgery room bed efficiency'].append(departments[0].bed_efficiency_and_unused_beds(clock, simulation_time)[0])
+    estimators['pre surgery room unused beds'].append(departments[0].bed_efficiency_and_unused_beds(clock, simulation_time)[1])
+    estimators['emergency room bed efficiency'].append(departments[1].bed_efficiency_and_unused_beds(clock, simulation_time)[0])
+    estimators['emergency room unused beds'].append(departments[1].bed_efficiency_and_unused_beds(clock, simulation_time)[1])
+    estimators['laboratory max queue'].append(departments[2].max_queue())
+    estimators['laboratory average queue'].append(departments[2].average_queue())
+    estimators['laboratory bed efficiency'].append(departments[2].bed_efficiency_and_unused_beds(clock, simulation_time)[0])
+    estimators['laboratory unused beds'].append(departments[2].bed_efficiency_and_unused_beds(clock, simulation_time)[1])
+    estimators['operation room max queue'].append(departments[3].max_queue())
+    estimators['operation room average queue'].append(departments[3].average_queue())
+    estimators['operation room bed efficiency'].append(departments[3].bed_efficiency_and_unused_beds(clock, simulation_time)[0])
+    estimators['operation room unused beds'].append(departments[3].bed_efficiency_and_unused_beds(clock, simulation_time)[1])
+    estimators['icu max queue'].append(departments[5].max_queue())
+    estimators['icu average queue'].append(departments[5].average_queue())
+    estimators['icu bed efficiency'].append(departments[5].bed_efficiency_and_unused_beds(clock, simulation_time)[0])
+    estimators['icu unused beds'].append(departments[5].bed_efficiency_and_unused_beds(clock, simulation_time)[1])
+    estimators['ccu max queue'].append(departments[6].max_queue())
+    estimators['ccu average queue'].append(departments[6].average_queue())
+    estimators['ccu bed efficiency'].append(departments[6].bed_efficiency_and_unused_beds(clock, simulation_time)[0])
+    estimators['ccu unused beds'].append(departments[6].bed_efficiency_and_unused_beds(clock, simulation_time)[1])
+    estimators['ward bed efficiency'].append(departments[4].bed_efficiency_and_unused_beds(clock, simulation_time)[0])
+    estimators['ward unused beds'].append(departments[4].bed_efficiency_and_unused_beds(clock, simulation_time)[1])
     estimators['average redo surgeries'].append(redo_avg)
     estimators['percentage of normal patients waiting more than one day in operation room queue'].append(one_day_wait)
     return estimators
@@ -480,12 +484,13 @@ event_handlers = {
     'ward departure': ward_departure,
 }
 
-# Bigdata -> departments -> queue&beds
-big_data = {}
-for dep in analyze:
-    big_data[dep] = {}
-    big_data[dep]['queue'] = [{}]
-    big_data[dep]['beds'] = [{}]
+big_data = {'queue':{},'beds':{}}
+for dep in departments_in_hospital:
+    if dep.name in analyze:
+        if analyze[dep.name][0] == True:
+            big_data['queue'][dep.name] = list()
+        if analyze[dep.name][1] == True:
+            big_data['beds'][dep.name] = list()
 
 for rep in range(REPLICATIONS):
     print(f"\nReplication {rep + 1}")
@@ -544,15 +549,9 @@ for rep in range(REPLICATIONS):
         else: 
             department_reported, fel = event_handlers[event](clock, fel, patient)
             
-        if step <= analyze_steps:
-            for dep in big_data:
-                if dep == department_reported.name:
-                    big_data[dep]['beds'][-1][step] = department_reported.beds
-                    if department_reported.normal_queue is not None and department_reported.priority_queue is not None:
-                        big_data[dep]['queue'][-1][step] = department_reported.priority_queue + department_reported.normal_queue
-                    else:
-                        big_data[dep]['queue'][-1][step] = department_reported.priority_queue if department_reported.priority_queue is not None else department_reported.normal_queue
-                    
+        for dep in departments_in_hospital:
+            dep.update_database(step)
+            
         'this is for debug(simply ignore)'
         #print(str(convert_minutes_to_format(clock)).ljust(10) + '\t' + str(event).ljust(10) + '\t' + str(department_reported.report()).ljust(10) + 
         #        '\t' + str(patient.id).ljust(10) + '\t' + str(patient.type).ljust(10) + '\t' + str(patient.surgery).ljust(10))
@@ -563,10 +562,19 @@ for rep in range(REPLICATIONS):
         step += 1
         
     # End of simulation
-    
-    #xlsx_writer(tracker, f'replication {rep+1}')
+    if CREATE_EXCEL == True:
+        xlsx_writer(tracker, f'replication {rep+1}')
     
     # calculating metrics
+    
+    for deps in big_data['queue']:
+        for d in departments_in_hospital:
+            if d.name == deps:
+                big_data['queue'][deps].append(dict(list(d.queue_step.items())[:analyze_steps]))
+    for deps in big_data['beds']:
+        for d in departments_in_hospital:
+            if d.name == deps:
+                big_data['beds'][deps].append(dict(list(d.bed_step.items())[:analyze_steps]))
     
     for dep in departments_in_hospital:
         if dep.name == operation_room.name:
@@ -591,14 +599,13 @@ for rep in range(REPLICATIONS):
     one_day_wait = sum(waiting_time_or_normal) / len(waiting_time_or_normal) if len(waiting_time_or_normal)!=0 else 0
     
     # Saving collected metrics
-    estimators = update_estimators(estimators, clock, SIMULATION_TIME, rep + 1, avg_stay, prob_emergency_queue_full, redo_avg, one_day_wait)
+    estimators = update_estimators(estimators, clock, SIMULATION_TIME, rep + 1, avg_stay, prob_emergency_queue_full, redo_avg, one_day_wait, departments_in_hospital)
 
     # reseting the departments for new replication
     emergency_room, pre_Surgery_room, laboratory, operation_room, ward, icu, ccu = get_departments()
-    for dep in big_data:
-        big_data[dep]['queue'].append({})
-        big_data[dep]['beds'].append({})
+    departments_in_hospital = [pre_Surgery_room, emergency_room, laboratory, operation_room, ward, icu, ccu]
 
+    
 # end of replications
 # calculating mean and confidence intervals
 for key in estimators:
@@ -609,20 +616,15 @@ for key in estimators:
         mean, confidence_interval = mean_and_confidence_interval(estimators[key])
         estimators[key].append(mean)
         estimators[key].append(f'{confidence_interval}')
-        
+ 
 # writing the excel file for metrics
-#xlsx_writer(estimators, 'metrics')
+if CREATE_EXCEL == True:
+    xlsx_writer(estimators, 'metrics')
 
-for dep in big_data:
-    if analyze[dep][0] == True:
-        create_queue_plot(dep, big_data[dep]['queue'])
-    if analyze[dep][1] == True:
-        create_bed_plot(dep, big_data[dep]['beds'])
-
-
-
-#for i in estimators:
-#    print('\n' + i, estimators[i])
+for dep in big_data['queue']:
+    create_queue_plot(dep, big_data['queue'][dep])
+for dep in big_data['beds']:
+    create_bed_plot(dep, big_data['beds'][dep])
 
 b = time.time()
 # calculating time of simluation
